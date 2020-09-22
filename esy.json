@@ -26,7 +26,10 @@
     "build": "esy b dune build",
     "start": "esy b dune build --watch",
     "test": "esy b dune exec test/Run.exe",
-    "format": "esy b dune build @fmt --auto-promote --root ."
+    "format": "esy b dune build @fmt --auto-promote --root .",
+    "web:clean": "bsb -clean-world",
+    "web:build": "bsb -make-world",
+    "web:watch": "bsb -make-world -w"
   },
   "esy": {
     "build": "dune build -p query-json",
@@ -42,6 +45,8 @@
   },
   "devDependencies": {
     "@esy-ocaml/reason": "~3.6.0",
+    "bs-sedlex": "^20.0.0",
+    "ppx-sedlex": "^20.0.0",
     "@opam/bisect_ppx": "2.4.1",
     "@opam/dune": "^2.7.0",
     "@opam/menhir": "20200624",
@@ -50,7 +55,7 @@
     "@opam/yojson": "1.7.0",
     "@reason-native/console": "^0.1.0",
     "@reason-native/rely": "^3.2.1",
-    "ocaml": "4.10.0",
+    "ocaml": "4.06.1",
     "@opam/ocaml-lsp-server": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a50a85aacf2bf0479e7c8f8fd1a9fc977c2",
     "@opam/cmdliner": "1.0.4",
     "bats": "^1.1.0"

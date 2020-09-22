@@ -1,0 +1,36 @@
+{
+  "name": "query-json",
+  "reason": {
+    "react-jsx": 3
+  },
+  "bsc-flags": [
+    "-bs-super-errors"
+  ],
+  "warnings": {
+    "number": "-44-45",
+    "error": "+8+26+27"
+  },
+  "files": "*.re",
+  "sources": [
+    {
+      "dir": ".",
+      "subdirs": true
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "es6",
+      "in-source": true
+    }
+  ],
+  "suffix": ".bs.js",
+  "namespace": true,
+  "bs-dev-dependencies": [],
+  "bs-dependencies": [
+    "bs-sedlex"
+  ],
+  "ppx-flags": [
+    "ppx-sedlex/ppx.js"
+  ],
+  "refmt": 3
+}
