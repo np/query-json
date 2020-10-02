@@ -37,36 +37,51 @@ let makeError = (name: string, json: Json.t) => {
   };
 };
 
-let empty = Ok([]);
+let lift2_result =
+    (f: ('a, 'b) => 'c, res_a: result('a, 'e), res_b: result('b, 'e))
+    : result('c, 'e) =>
+  Result.bind(res_a, x => Result.map(f(x), res_b));
 
-module Results {
+module Results : {
+  type t('a) = result(list('a), string);
+
+  /* The identity filter. It takes a value v and sucessfuly returns v once. */
+  let return : 'a => t('a);
+
+  /* The empty set of result. */
+  let empty : t('a);
+
+  /* Given two set of results, merge them together. */
+  let mplus : t('a) => t('a) => t('a);
+
+  /* Given a list of set of results, merge them together. */
+  let msum : list(t('a)) => t('a);
+
+  /* Apply the given function to set of results. */
+  let map : ('a => 'b) => t('a) => t('b);
+
+  /* Monadic bind for a set of results. The each result, the given function,
+     yields a set of results, all the results are merged together. */
+  let bind: t('a) => ('a => t('b)) => t('b);
+
+} = {
+  /* Naming convention: A variable of type t('a) is named t_a, a list(t('a)) is named t_as. */
+  type t('a) = result(list('a), string);
+
   let return = x => Ok([x]);
 
-  let lift2 =
-      (f: ('a, 'b) => 'c, mx: result('a, string), my: result('b, string))
-      : result('c, string) => {
-    switch (mx) {
-    | Ok(x) =>
-      switch (my) {
-      | Ok(y) => Ok(f(x, y))
-      | Error(err) => Error(err)
-      }
-    | Error(err) => Error(err)
-    };
-  };
+  let empty = Ok([]);
 
-  let collect =
-      (xs: list(result(list('a), string))): result(list('a), string) =>
-    List.fold_right(lift2((@)), xs, empty);
+  let mplus = (t_a1: t('a), t_a2: t('a)): t('a) => lift2_result((@), t_a1, t_a2);
 
-  let bind =
-      (mx: result(list('a), string), f: 'a => result(list('b), string))
-      : result(list('b), string) => {
-    switch (mx) {
-    | Ok(xs) => collect(List.map(f, xs))
-    | Error(err) => Error(err)
-    };
-  };
+  let msum = (t_as: list(t('a))): t('a) =>
+    List.fold_right(mplus, t_as, empty);
+
+  let map = (f: 'a => 'b, t_a: t('a)) : t('b) =>
+    Result.map(xs => List.map(f, xs), t_a);
+
+  let bind = (t_a: t('a), f: 'a => t('b)) : t('b) =>
+    Result.bind(t_a, xs => msum(List.map(f, xs)));
 }
 
 
@@ -213,7 +228,7 @@ let rec compile =
         (expression: expression, json): result(list(Json.t), string) => {
   switch (expression) {
   | Identity => Results.return(json)
-  | Empty => empty
+  | Empty => Results.empty
   | Keys => keys(json)
   | Key(key, opt) => member(key, opt, json)
   | Index(idx) => index(idx, json)
@@ -237,7 +252,7 @@ let rec compile =
   | Select(conditional) =>
     Results.bind(compile(conditional, json), res =>
       switch (res) {
-      | `Bool(b) => b ? Results.return(json) : empty
+      | `Bool(b) => b ? Results.return(json) : Results.empty
       | _ => Error(makeError("select", res))
       }
     )
@@ -267,7 +282,7 @@ and map = (expr: expression, json: Json.t) => {
   | `List(list) =>
     List.length(list) > 0
       ? {
-        Results.collect(List.map(item => compile(expr, item), list)) |> Result.map(x => [`List(x)])
+        Results.msum(List.map(item => compile(expr, item), list)) |> Result.map(x => [`List(x)])
       }
       : Error(makeEmptyListError("map"))
   | _ => Error(makeError("map", json))
