@@ -96,6 +96,8 @@ let keys = (json: Json.t) => {
 let length = (json: Json.t) => {
   switch (json) {
   | `List(list) => Results.return(`Int(list |> List.length))
+  | `Assoc(a)   => Results.return(`Int(a    |> List.length))
+  | `String(s)  => Results.return(`Int(s    |> String.length))
   | _ => Error(makeError("length", json))
   };
 };
@@ -109,13 +111,16 @@ let not_ = (json: Json.t) => {
 };
 
 let apply =
-    (str: string, fn: (float, float) => float, left: Json.t, right: Json.t) => {
+    (str: string,
+     fn_float: (float, float) => float,
+     fn_int: (int, int) => int,
+     left: Json.t,
+     right: Json.t) => {
   switch (left, right) {
-  | (`Float(l), `Float(r)) => Results.return(`Float(fn(l, r)))
-  | (`Int(l), `Float(r)) => Results.return(`Float(fn(float_of_int(l), r)))
-  | (`Float(l), `Int(r)) => Results.return(`Float(fn(l, float_of_int(r))))
-  | (`Int(l), `Int(r)) =>
-    Results.return(`Float(fn(float_of_int(l), float_of_int(r))))
+  | (`Float(l), `Float(r)) => Results.return(`Float(fn_float(l, r)))
+  | (`Int(l), `Float(r)) => Results.return(`Float(fn_float(float_of_int(l), r)))
+  | (`Float(l), `Int(r)) => Results.return(`Float(fn_float(l, float_of_int(r))))
+  | (`Int(l), `Int(r)) => Results.return(`Int(fn_int(l, r)))
   | _ => Error(makeError(str, left))
   };
 };
@@ -151,10 +156,21 @@ let or_ = condition("or", (||));
 let eq = (l, r) => Results.return(`Bool(l == r));
 let notEq = (l, r) => Results.return(`Bool(l != r));
 
-let add = apply("+", (l, r) => l +. r);
-let sub = apply("-", (l, r) => l -. r);
-let mult = apply("-", (l, r) => l *. r);
-let div = apply("-", (l, r) => l /. r);
+let plus = (left: Json.t, right: Json.t) => {
+  switch (left, right) {
+  | (`Float(l), `Float(r)) => Ok(`Float(l +. r))
+  | (`Int(l), `Float(r)) => Ok(`Float(float_of_int(l) +. r))
+  | (`Float(l), `Int(r)) => Ok(`Float(l +. float_of_int(r)))
+  | (`Int(l), `Int(r)) => Ok(`Int(l + r))
+  | (`String(l), `String(r)) => Ok(`String(l ++ r))
+  | (`List(l), `List(r)) => Ok(`List(l @ r))
+  | _ => Error(makeError("+", left) ++ " or " ++ makeError("+", right))
+  }
+};
+
+let sub = apply("-", (-.), (-));
+let mult = apply("*", (*.), (*));
+let div = apply("/", (/.), (/));
 
 let filter = (fn: Json.t => bool, json: Json.t) => {
   switch (json) {
@@ -237,7 +253,7 @@ let rec compile =
   | Length => length(json)
   | Not => not_(json)
   | Map(expr) => map(expr, json)
-  | Addition(left, right) => operation(left, right, add, json)
+  | Addition(left, right) => operation(left, right, (a,b) => Result.map(x => [x], plus(a,b)), json)
   | Subtraction(left, right) => operation(left, right, sub, json)
   | Multiply(left, right) => operation(left, right, mult, json)
   | Division(left, right) => operation(left, right, div, json)
