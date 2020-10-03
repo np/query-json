@@ -185,6 +185,14 @@ let makeEmptyListError = op => {
   ++ " on an empty array.";
 };
 
+let each = (json: Json.t) => {
+  switch (json) {
+  | `List(list) => Ok(list)
+  | `Assoc(assoc) => Ok(List.map(snd, assoc))
+  | _ => Error(makeError("each", json))
+  };
+};
+
 let head = (json: Json.t) => {
   switch (json) {
   | `List(list) =>
@@ -248,6 +256,7 @@ let rec compile =
   | Keys => keys(json)
   | Key(key, opt) => member(key, opt, json)
   | Index(idx) => index(idx, json)
+  | Each => each(json)
   | Head => head(json)
   | Tail => tail(json)
   | Length => length(json)

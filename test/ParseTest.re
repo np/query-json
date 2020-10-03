@@ -46,6 +46,9 @@ let tests: list((string, expression)) = [
   ("(empty).foo?", Pipe(Empty, Key("foo", true))),
   ("{}", Object([])),
   ("{a: ., \"b\": true}", Object([("a", Identity), ("b", Literal(Bool(true)))])),
+  (".[]", Pipe(Identity, Each)),
+  ("[1,2][]", Pipe(List(Comma(Literal(Number(1.)), Literal(Number(2.)))), Each)),
+  ("{a: true}[]", Pipe(Object([("a", Literal(Bool(true)))]), Each)),
 ];
 
 describe("correctly parse value", ({test, _}) => {

@@ -182,6 +182,8 @@ term:
     { Object(a) }
   | OPEN_PARENT; e = expr; CLOSE_PARENT;
     { e }
+  | e = term; OPEN_BRACKET; CLOSE_BRACKET
+    { Pipe(e, Each) }
   | e = term; OPEN_BRACKET; i = NUMBER; CLOSE_BRACKET
     { Pipe(e, Index(int_of_float(i))) }
 

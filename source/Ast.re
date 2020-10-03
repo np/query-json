@@ -21,7 +21,8 @@ type expression =
   /* Objects */
   | Walk(expression) /* walk() */
   | Transpose(expression) /* transpose() */
-  | Key(string, bool) /* .foo */
+  | Key(string, bool) /* .foo or ."foo" */
+  | Each /* .[] */
   | Has(expression) /* has(x) */
   | Keys /* keys */
   | Floor /* floor */
