@@ -17,7 +17,7 @@ type expression =
   | Literal(literal)
   /* Constructors */
   | List(expression) /* [ expr ] */
-  | Object(list((string, expression))) /* {} */
+  | Object(list((string, expression))) /* {field_1: expr_1, ..., field_n: expr_n} */
   /* Objects */
   | Walk(expression) /* walk() */
   | Transpose(expression) /* transpose() */

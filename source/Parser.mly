@@ -11,6 +11,7 @@
 %token DOT
 %token RECURSE
 %token PIPE
+%token COLON
 %token SEMICOLON
 %token ADD SUB MULT DIV
 %token EQUAL NOT_EQUAL GREATER LOWER GREATER_EQUAL LOWER_EQUAL AND OR
@@ -24,10 +25,8 @@
 
 %token OPEN_BRACKET
 %token CLOSE_BRACKET
-/*
 %token OPEN_BRACE
 %token CLOSE_BRACE
- */
 %token EOF
 
 /* %left OPEN_BRACKET */
@@ -179,6 +178,8 @@ term:
     { List(Empty) }
   | OPEN_BRACKET; e = expr; CLOSE_BRACKET;
     { List(e) }
+  | OPEN_BRACE; a = separated_list(COMMA, separated_pair(identifier_or_string, COLON, term)); CLOSE_BRACE;
+    { Object(a) }
   | OPEN_PARENT; e = expr; CLOSE_PARENT;
     { e }
   | e = term; OPEN_BRACKET; i = NUMBER; CLOSE_BRACKET
@@ -195,4 +196,9 @@ term:
 
   | e = term; DOT; k = IDENTIFIER; opt = boption(QUESTION_MARK)
     { Pipe(e, Key(k, opt)) }
+  ;
+
+identifier_or_string:
+  | i = IDENTIFIER { i }
+  | s = STRING     { s }
   ;

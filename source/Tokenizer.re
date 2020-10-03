@@ -18,6 +18,7 @@ type token =
   | OPEN_BRACKET
   | CLOSE_BRACKET
   | OPEN_BRACE
+  | COLON
   | SEMICOLON
   | CLOSE_BRACE
   | DOT
@@ -86,6 +87,7 @@ let rec tokenize = buf => {
   | "{" => Ok(OPEN_BRACE)
   | "}" => Ok(CLOSE_BRACE)
   | "|" => Ok(PIPE)
+  | ":" => Ok(COLON)
   | ";" => Ok(SEMICOLON)
   | "," => Ok(COMMA)
   | "?" => Ok(QUESTION_MARK)
